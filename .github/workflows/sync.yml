@@ -21,17 +21,19 @@ jobs:
       - name: Install dependencies
         run: pip install spotify_to_ytmusic
 
-      - name: Create config file
+      - name: Create settings file
         env:
           SPOTIPY_CLIENT_ID: ${{ secrets.SPOTIPY_CLIENT_ID }}
           SPOTIPY_CLIENT_SECRET: ${{ secrets.SPOTIPY_CLIENT_SECRET }}
           YTMUSIC_COOKIE: ${{ secrets.YTMUSIC_COOKIE }}
         run: |
           mkdir -p ~/.config/spotify_to_ytmusic
-          cat > ~/.config/spotify_to_ytmusic/config.ini << EOF
+          cat > ~/.config/spotify_to_ytmusic/settings.ini << EOF
           [spotify]
           client_id = ${SPOTIPY_CLIENT_ID}
           client_secret = ${SPOTIPY_CLIENT_SECRET}
+          redirect_uri = https://localhost/callback
+
           [ytmusic]
           cookie = ${YTMUSIC_COOKIE}
           EOF
