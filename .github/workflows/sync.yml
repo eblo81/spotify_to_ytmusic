@@ -21,45 +21,11 @@ jobs:
       - name: Install dependencies
         run: pip install spotify_to_ytmusic
 
-      - name: Create settings file
-        env:
-          SPOTIPY_CLIENT_ID: ${{ secrets.SPOTIPY_CLIENT_ID }}
-          SPOTIPY_CLIENT_SECRET: ${{ secrets.SPOTIPY_CLIENT_SECRET }}
-          YTMUSIC_COOKIE: ${{ secrets.YTMUSIC_COOKIE }}
+      - name: Debug - show ytmusic.py source
         run: |
-          python3 << PYEOF
-          import json, os
+          python3 -c "
           from pathlib import Path
-          import platformdirs
-
-          cache_dir = Path(platformdirs.user_cache_dir(appname="spotify_to_ytmusic", appauthor=False, ensure_exists=True))
-
-          cookie = os.environ['YTMUSIC_COOKIE']
-          headers_json = json.dumps({
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-              "Accept": "*/*",
-              "Accept-Language": "en-US,en;q=0.9",
-              "Content-Type": "application/json",
-              "Cookie": cookie,
-              "X-Goog-AuthUser": "0",
-              "x-origin": "https://music.youtube.com"
-          })
-
-          settings_path = cache_dir / "settings.ini"
-          content = f"""[youtube]
-          headers = {headers_json}
-          user_id =
-          auth_type = browser
-
-          [spotify]
-          client_id = {os.environ['SPOTIPY_CLIENT_ID']}
-          client_secret = {os.environ['SPOTIPY_CLIENT_SECRET']}
-          use_oauth = False
-          """
-          settings_path.write_text(content)
-          print(f"Settings written to {settings_path}")
-          print("Headers start:", headers_json[:50])
-          PYEOF
-
-      - name: Run sync
-        run: spotify_to_ytmusic all 21newifszcn57jsgimmo6uqga
+          import spotify_to_ytmusic
+          p = Path(spotify_to_ytmusic.__file__).parent / 'ytmusic.py'
+          print(p.read_text())
+          "
