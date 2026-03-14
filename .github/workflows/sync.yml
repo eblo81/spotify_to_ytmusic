@@ -21,15 +21,6 @@ jobs:
       - name: Install dependencies
         run: pip install spotify_to_ytmusic
 
-      - name: Debug - show example settings
-        run: |
-          python3 -c "
-          from pathlib import Path
-          import spotify_to_ytmusic
-          example = Path(spotify_to_ytmusic.__file__).parent / 'settings.ini.example'
-          print(example.read_text())
-          "
-
       - name: Create settings file
         env:
           SPOTIPY_CLIENT_ID: ${{ secrets.SPOTIPY_CLIENT_ID }}
@@ -37,14 +28,30 @@ jobs:
           YTMUSIC_COOKIE: ${{ secrets.YTMUSIC_COOKIE }}
         run: |
           CACHE_DIR=$(python3 -c "import platformdirs; print(platformdirs.user_cache_dir(appname='spotify_to_ytmusic', appauthor=False, ensure_exists=True))")
+          HEADERS_JSON=$(python3 -c "
+          import json, os
+          cookie = os.environ['YTMUSIC_COOKIE']
+          headers = {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': '*/*',
+              'Accept-Language': 'en-US,en;q=0.9',
+              'Content-Type': 'application/json',
+              'Cookie': cookie,
+              'X-Goog-AuthUser': '0',
+              'x-origin': 'https://music.youtube.com'
+          }
+          print(json.dumps(headers))
+          ")
           cat > "$CACHE_DIR/settings.ini" << EOF
+          [youtube]
+          headers = $HEADERS_JSON
+          user_id =
+          auth_type = browser
+
           [spotify]
           client_id = ${SPOTIPY_CLIENT_ID}
           client_secret = ${SPOTIPY_CLIENT_SECRET}
-          redirect_uri = https://localhost/callback
-
-          [ytmusic]
-          cookie = ${YTMUSIC_COOKIE}
+          use_oauth = False
           EOF
 
       - name: Run sync
