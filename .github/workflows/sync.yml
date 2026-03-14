@@ -21,22 +21,15 @@ jobs:
       - name: Install dependencies
         run: pip install spotify_to_ytmusic
 
-      - name: Debug - find settings path
-        run: |
-          python3 -c "
-          import spotify_to_ytmusic.settings as s
-          import inspect
-          print(inspect.getsource(s))
-          "
-
       - name: Create settings file
         env:
           SPOTIPY_CLIENT_ID: ${{ secrets.SPOTIPY_CLIENT_ID }}
           SPOTIPY_CLIENT_SECRET: ${{ secrets.SPOTIPY_CLIENT_SECRET }}
           YTMUSIC_COOKIE: ${{ secrets.YTMUSIC_COOKIE }}
         run: |
-          mkdir -p ~/.config/spotify_to_ytmusic
-          cat > ~/.config/spotify_to_ytmusic/settings.ini << EOF
+          CACHE_DIR=$(python3 -c "import platformdirs; print(platformdirs.user_cache_dir(appname='spotify_to_ytmusic', appauthor=False, ensure_exists=True))")
+          echo "Cache dir: $CACHE_DIR"
+          cat > "$CACHE_DIR/settings.ini" << EOF
           [spotify]
           client_id = ${SPOTIPY_CLIENT_ID}
           client_secret = ${SPOTIPY_CLIENT_SECRET}
@@ -45,6 +38,8 @@ jobs:
           [ytmusic]
           cookie = ${YTMUSIC_COOKIE}
           EOF
+          echo "Settings file created at $CACHE_DIR/settings.ini"
+          cat "$CACHE_DIR/settings.ini"
 
       - name: Run sync
         run: spotify_to_ytmusic all 21newifszcn57jsgimmo6uqga
