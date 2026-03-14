@@ -37,4 +37,4 @@ jobs:
           EOF
 
       - name: Run sync
-        run: spotify_to_ytmusic all
+        run: spotify_to_ytmusic all 21newifszcn57jsgimmo6uqga
