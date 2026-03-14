@@ -28,31 +28,48 @@ jobs:
           YTMUSIC_COOKIE: ${{ secrets.YTMUSIC_COOKIE }}
         run: |
           CACHE_DIR=$(python3 -c "import platformdirs; print(platformdirs.user_cache_dir(appname='spotify_to_ytmusic', appauthor=False, ensure_exists=True))")
-          HEADERS_JSON=$(python3 -c "
-          import json, os
+
+          python3 << PYEOF
+          import json, os, configparser
+          from pathlib import Path
+          import platformdirs
+
+          cache_dir = Path(platformdirs.user_cache_dir(appname="spotify_to_ytmusic", appauthor=False, ensure_exists=True))
+
           cookie = os.environ['YTMUSIC_COOKIE']
           headers = {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-              'Accept': '*/*',
-              'Accept-Language': 'en-US,en;q=0.9',
-              'Content-Type': 'application/json',
-              'Cookie': cookie,
-              'X-Goog-AuthUser': '0',
-              'x-origin': 'https://music.youtube.com'
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              "Accept": "*/*",
+              "Accept-Language": "en-US,en;q=0.9",
+              "Content-Type": "application/json",
+              "Cookie": cookie,
+              "X-Goog-AuthUser": "0",
+              "x-origin": "https://music.youtube.com"
           }
-          print(json.dumps(headers))
-          ")
-          cat > "$CACHE_DIR/settings.ini" << EOF
-          [youtube]
-          headers = $HEADERS_JSON
-          user_id =
-          auth_type = browser
 
-          [spotify]
-          client_id = ${SPOTIPY_CLIENT_ID}
-          client_secret = ${SPOTIPY_CLIENT_SECRET}
-          use_oauth = False
-          EOF
+          # Scrivi headers.json separato
+          headers_path = cache_dir / "headers.json"
+          headers_path.write_text(json.dumps(headers))
+
+          # Scrivi settings.ini
+          config = configparser.ConfigParser()
+          config["youtube"] = {
+              "headers": str(headers_path),
+              "user_id": "",
+              "auth_type": "browser"
+          }
+          config["spotify"] = {
+              "client_id": os.environ["SPOTIPY_CLIENT_ID"],
+              "client_secret": os.environ["SPOTIPY_CLIENT_SECRET"],
+              "use_oauth": "False"
+          }
+          settings_path = cache_dir / "settings.ini"
+          with open(settings_path, "w") as f:
+              config.write(f)
+
+          print(f"Settings written to {settings_path}")
+          print(f"Headers written to {headers_path}")
+          PYEOF
 
       - name: Run sync
         run: spotify_to_ytmusic all 21newifszcn57jsgimmo6uqga
