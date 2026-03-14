@@ -1,0 +1,40 @@
+name: Sync Spotify to YouTube Music
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Ogni giorno alle 6:00 UTC
+  workflow_dispatch:       # Permette anche avvio manuale
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install spotify_to_ytmusic
+
+      - name: Create config file
+        env:
+          SPOTIPY_CLIENT_ID: ${{ secrets.SPOTIPY_CLIENT_ID }}
+          SPOTIPY_CLIENT_SECRET: ${{ secrets.SPOTIPY_CLIENT_SECRET }}
+          YTMUSIC_COOKIE: ${{ secrets.YTMUSIC_COOKIE }}
+        run: |
+          mkdir -p ~/.config/spotify_to_ytmusic
+          cat > ~/.config/spotify_to_ytmusic/config.ini << EOF
+          [spotify]
+          client_id = ${SPOTIPY_CLIENT_ID}
+          client_secret = ${SPOTIPY_CLIENT_SECRET}
+          [ytmusic]
+          cookie = ${YTMUSIC_COOKIE}
+          EOF
+
+      - name: Run sync
+        run: spotify_to_ytmusic sync
