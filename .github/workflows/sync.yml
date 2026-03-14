@@ -2,8 +2,8 @@ name: Sync Spotify to YouTube Music
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # Ogni giorno alle 6:00 UTC
-  workflow_dispatch:       # Permette anche avvio manuale
+    - cron: '0 6 * * *'
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -20,6 +20,14 @@ jobs:
 
       - name: Install dependencies
         run: pip install spotify_to_ytmusic
+
+      - name: Debug - find settings path
+        run: |
+          python3 -c "
+          import spotify_to_ytmusic.settings as s
+          import inspect
+          print(inspect.getsource(s))
+          "
 
       - name: Create settings file
         env:
